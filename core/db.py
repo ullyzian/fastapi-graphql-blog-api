@@ -14,11 +14,3 @@ Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=en
 
 Base = declarative_base()
 Base.query = Session.query_property()
-
-
-def get_db():
-    db = Session()
-    try:
-        return db
-    finally:
-        db.close()
