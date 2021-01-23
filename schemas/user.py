@@ -3,10 +3,14 @@ from graphene_sqlalchemy import SQLAlchemyObjectType
 from graphql import GraphQLError
 
 from core.db import Session
-from core.security import create_jwt_token, hash_password, verify_password
+from core.security import create_jwt_token, hash_password, verify_password, verify_token
 from models.user import User
 
 db = Session.session_factory()
+
+
+class ErrorSchema(graphene.ObjectType):
+    error = graphene.String()
 
 
 class UserSchema(SQLAlchemyObjectType):
@@ -46,6 +50,19 @@ class CreateUser(graphene.Mutation):
             return CreateUser(errors=errors, success=False)
 
 
+class AuthenticateUser(graphene.Mutation):
+
+    user = graphene.Field(UserSchema)
+    success = graphene.Boolean()
+
+    @staticmethod
+    def mutate(parent, info):
+        user = info.context.get("request").user
+        if not user.is_authenticated:
+            raise GraphQLError('Not authorized')
+        return AuthenticateUser(user=user, success=True)
+
+
 class SignUpUser(graphene.Mutation):
     class Arguments:
         username = graphene.String(required=True)
@@ -53,7 +70,7 @@ class SignUpUser(graphene.Mutation):
         fullname = graphene.String()
 
     user = graphene.Field(UserSchema)
-    errors = graphene.List(graphene.String)
+    errors = graphene.List(ErrorSchema)
     success = graphene.Boolean()
 
     @staticmethod
@@ -65,7 +82,7 @@ class SignUpUser(graphene.Mutation):
             db.refresh(user)
             return SignUpUser(user=user, success=True)
         except Exception:
-            errors = ["username", "This username already taken"]
+            errors = [{"error": "This username already taken"}]
             return SignUpUser(errors=errors, success=False)
 
 
@@ -75,14 +92,14 @@ class SignInUser(graphene.Mutation):
         password = graphene.String(required=True)
 
     token = graphene.String()
-    errors = graphene.List(graphene.String)
+    errors = graphene.List(ErrorSchema)
     success = graphene.Boolean()
 
     @staticmethod
     def mutate(parent, info, username, password):
         user = db.query(User).filter_by(username=username).first()
         if user is None or not verify_password(password, user.password):
-            errors = ["credentials", "Can't validate username or password"]
+            errors = [{"error": "Can't validate username or password"}]
             return SignInUser(errors=errors, success=False)
         token = create_jwt_token(data={"sub": user.username, "id": user.id})
         return SignInUser(token=token, success=True)

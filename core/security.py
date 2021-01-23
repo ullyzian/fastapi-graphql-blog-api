@@ -1,8 +1,7 @@
 import os
 from datetime import datetime, timedelta
+
 import jwt
-
-
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -17,6 +16,16 @@ def create_jwt_token(*, data: dict, expires_delta: timedelta = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, os.getenv("SECRET_KEY"), algorithm="HS256")
     return encoded_jwt
+
+
+def verify_token(token: str):
+    try:
+        payload = jwt.decode(token, os.getenv('SECRET_KEY'), algorithms="HS256")
+        if payload.sub is not None:
+            return payload
+        return None
+    except Exception:
+        return None
 
 
 def hash_password(password: str):

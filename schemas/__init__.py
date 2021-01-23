@@ -5,7 +5,7 @@ from core.db import Session
 from models import Comment, Post, User
 from .comment import CommentSchema, CreateComment, DeleteComment, UpdateComment
 from .post import CreatePost, DeletePost, PostSchema, UpdatePost
-from .user import CreateUser, SignInUser, SignUpUser, UserSchema
+from .user import CreateUser, SignInUser, SignUpUser, UserSchema, AuthenticateUser
 
 db = Session.session_factory()
 
@@ -77,3 +77,4 @@ class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     sign_up_user = SignUpUser.Field()
     sign_in_user = SignInUser.Field()
+    authenticate_user = AuthenticateUser.Field()

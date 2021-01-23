@@ -12,6 +12,8 @@ class BasicAuthBackend(AuthenticationBackend):
             return
 
         auth = request.headers["Authorization"]
+        if auth is None or auth == '':
+            return
         header, token = auth.split()
 
         try:
