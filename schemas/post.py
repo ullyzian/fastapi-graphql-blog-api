@@ -11,7 +11,6 @@ db = Session.session_factory()
 class PostSchema(SQLAlchemyObjectType):
     class Meta:
         model = Post
-        exclude_fields = ("author_id",)
 
 
 class CreatePost(graphene.Mutation):
@@ -49,7 +48,7 @@ class UpdatePost(graphene.Mutation):
         if not user.is_authenticated:
             raise GraphQLError('Not authorized')
 
-        post = db.query(Post).filter_by(id=id, author_id=user.id)
+        post = db.query(Post).filter_by(id=id, author_id=user.id).first()
         if post is None:
             return UpdatePost(errors=["id", "Post with this id not found"], success=False)
         post.title = title
@@ -74,7 +73,9 @@ class DeletePost(graphene.Mutation):
         if not user.is_authenticated:
             raise GraphQLError('Not authorized')
 
-        post = db.query(Post).filter_by(id=id, author_id=user.id)
+        post = db.query(Post).filter_by(id=id, author_id=user.id).first()
         if post is None:
             return DeletePost(errors=["id", "Post with this id not found"], success=False)
-        return UpdatePost(post=post, success=True)
+        db.delete(post)
+        db.commit()
+        return DeletePost(post=post, success=True)
