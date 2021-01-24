@@ -14,7 +14,7 @@ middleware = [
 ]
 origins = [
     "http://localhost:8080",
-    "http://localhost:3000"
+    "http://localhost:3000",
     "https://react-apollo-blog.vercel.app",
     "https://fastapi-graphene-blog-api.herokuapp.com"
 ]
